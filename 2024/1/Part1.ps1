@@ -1,8 +1,8 @@
 #$ListA = 3,4,2,1,3,3 | sort
 #$ListB = 4,3,5,3,9,3 | sort
 
-$ListA = Get-Content .\List1.txt | sort
-$ListB = Get-Content .\List2.txt | sort
+$ListA = Get-Content $PSScriptRoot\List1.txt | sort
+$ListB = Get-Content $PSScriptRoot\List2.txt | sort
 
 $TotalDistance = 0
 
