@@ -1,2 +1,5 @@
 # Skip input files
 *.txt
+
+# Skip cache files
+*.xml
