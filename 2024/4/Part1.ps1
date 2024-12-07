@@ -1,4 +1,5 @@
 Set-StrictMode -Version latest
+$StartTime = Get-Date
 
 function Convert-TextToGrid {
     param (
@@ -6,8 +7,7 @@ function Convert-TextToGrid {
     )
 
     # Resultaat grid
-    $grid = @()
-    $gridHashtable = @{}
+    $Grid = @{}
 
     for ($y = 0; $y -lt $TextLines.Count; $y++) {
         $line = $TextLines[$y]
@@ -18,14 +18,11 @@ function Convert-TextToGrid {
                 Y      = $y
                 Letter = $letter
             }
-            $grid += $obj
-
-            $key = "$x,$y"
-            $gridHashtable[$key] = $obj
+            $Grid["$x,$y"] = $obj
         }
     }
 
-    return $grid, $gridHashtable
+    return $Grid
 }
 
 $Directions = @(
@@ -42,47 +39,24 @@ $Directions = @(
 $count = 0
 
 Write-Host "Generating grid.."
-$grid, $gridHashtable = Convert-TextToGrid -TextLines (Get-Content $PSScriptRoot\Input.txt)
-
-function Convert-GridToStringArray {
-    param (
-        [array]$Grid
-    )
-
-    # Bepaal de maximale Y-coördinaat om het aantal rijen te weten
-    $maxY = ($Grid | Measure-Object -Property Y -Maximum).Maximum
-
-    # Maak een array voor de output
-    $result = @()
-
-    for ($y = 0; $y -le $maxY; $y++) {
-        # Selecteer alle items in de huidige rij
-        $rij = $Grid | Where-Object { $_.Y -eq $y } | Sort-Object X
-
-        # Maak een string van de letters in de rij
-        $result += ($rij | ForEach-Object { $_.Letter }) -join ''
-    }
-
-    return $result
-}
-# Convert-GridToStringArray -Grid $grid
+$Grid = Convert-TextToGrid -TextLines (Get-Content $PSScriptRoot\Input.txt)
 
 Write-Host "Starting Search.."
-foreach ($StartPoint in $grid) {
+foreach ($StartPoint in $Grid.Values) {
     if ($StartPoint.Letter -eq 'X') {
         # Write-Host "Found starting point ($($StartPoint.X),$($StartPoint.Y))"
         foreach ($Direction in $Directions)
         {
-            $Point2 = $gridHashtable["$($StartPoint.X + $Direction.X),$($StartPoint.Y + $Direction.Y)"]
+            $Point2 = $Grid["$($StartPoint.X + $Direction.X),$($StartPoint.Y + $Direction.Y)"]
             if ($Point2 -and $Point2.Letter -eq 'M')
             {
-                $Point3 = $gridHashtable["$($Point2.X + $Direction.X),$($Point2.Y + $Direction.Y)"]
+                $Point3 = $Grid["$($Point2.X + $Direction.X),$($Point2.Y + $Direction.Y)"]
                 if ($Point3 -and $Point3.Letter -eq 'A')
                 {
-                    $Point4 = $gridHashtable["$($Point3.X + $Direction.X),$($Point3.Y + $Direction.Y)"]
+                    $Point4 = $Grid["$($Point3.X + $Direction.X),$($Point3.Y + $Direction.Y)"]
                     if ($Point4 -and $Point4.Letter -eq 'S')
                     {
-                        # Write-Host "Found XMAS: ($($Startpoint.X),$($Startpoint.Y)) to ($($Point4.X),$($Point4.Y))"
+                        Write-Host "Found XMAS: ($($Startpoint.X),$($Startpoint.Y)) to ($($Point4.X),$($Point4.Y))"
                         $count++
                     }
                 }
@@ -92,3 +66,5 @@ foreach ($StartPoint in $grid) {
     }
 }
 Write-Host "Count: $count"
+
+Write-Host "Runtime: $((Get-Date) - $StartTime)"

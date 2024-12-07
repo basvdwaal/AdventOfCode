@@ -1,4 +1,5 @@
 Set-StrictMode -Version latest
+$StartTime = Get-Date
 
 function Convert-TextToGrid {
     param (
@@ -6,8 +7,7 @@ function Convert-TextToGrid {
     )
 
     # Resultaat grid
-    $grid = @()
-    $gridHashtable = @{}
+    $Grid = @{}
 
     for ($y = 0; $y -lt $TextLines.Count; $y++) {
         $line = $TextLines[$y]
@@ -18,38 +18,36 @@ function Convert-TextToGrid {
                 Y      = $y
                 Letter = $letter
             }
-            $grid += $obj
-
-            $key = "$x,$y"
-            $gridHashtable[$key] = $obj
+            $Grid["$x,$y"] = $obj
         }
     }
 
-    return $grid, $gridHashtable
+    return $Grid
 }
 
 $count = 0
 
 Write-Host "Generating grid.."
-$grid, $gridHashtable = Convert-TextToGrid -TextLines (Get-Content $PSScriptRoot\Input.txt)
+$Grid = Convert-TextToGrid -TextLines (Get-Content $PSScriptRoot\Input.txt)
 
 Write-Host "Starting Search.."
-foreach ($StartPoint in $grid) {
+
+foreach ($StartPoint in $Grid.Values) {
     if ($StartPoint.Letter -eq 'A') {
-        Write-Host "Found starting point ($($StartPoint.X),$($StartPoint.Y))"
+        # Write-Host "Found starting point ($($StartPoint.X),$($StartPoint.Y))"
 
         $TopLeftCoords = "$($StartPoint.X - 1),$($StartPoint.Y - 1)"
         $TopRightCoords = "$($StartPoint.X + 1),$($StartPoint.Y - 1)"
         $BottomLeftCoords = "$($StartPoint.X - 1),$($StartPoint.Y + 1)"
         $BottomRightCoords = "$($StartPoint.X + 1),$($StartPoint.Y + 1)"
 
-        if (!($gridHashtable[$TopLeftCoords] -and $gridHashtable[$BottomRightCoords] -and $gridHashtable[$TopRightCoords] -and $gridHashtable[$BottomLeftCoords])) { continue }
+        if (!($Grid[$TopLeftCoords] -and $Grid[$BottomRightCoords] -and $Grid[$TopRightCoords] -and $Grid[$BottomLeftCoords])) { continue }
 
         if (
-            ($gridHashtable[$TopLeftCoords].Letter -eq 'M' -and $gridHashtable[$BottomRightCoords].Letter -eq 'S' -and $gridHashtable[$TopRightCoords].Letter -eq 'M' -and $gridHashtable[$BottomLeftCoords].Letter -eq 'S') -or `
-            ($gridHashtable[$TopLeftCoords].Letter -eq 'S' -and $gridHashtable[$BottomRightCoords].Letter -eq 'M' -and $gridHashtable[$TopRightCoords].Letter -eq 'S' -and $gridHashtable[$BottomLeftCoords].Letter -eq 'M') -or `
-            ($gridHashtable[$TopLeftCoords].Letter -eq 'M' -and $gridHashtable[$BottomRightCoords].Letter -eq 'S' -and $gridHashtable[$TopRightCoords].Letter -eq 'S' -and $gridHashtable[$BottomLeftCoords].Letter -eq 'M') -or `
-            ($gridHashtable[$TopLeftCoords].Letter -eq 'S' -and $gridHashtable[$BottomRightCoords].Letter -eq 'M' -and $gridHashtable[$TopRightCoords].Letter -eq 'M' -and $gridHashtable[$BottomLeftCoords].Letter -eq 'S') 
+            ($Grid[$TopLeftCoords].Letter -eq 'M' -and $Grid[$BottomRightCoords].Letter -eq 'S' -and $Grid[$TopRightCoords].Letter -eq 'M' -and $Grid[$BottomLeftCoords].Letter -eq 'S') -or `
+            ($Grid[$TopLeftCoords].Letter -eq 'S' -and $Grid[$BottomRightCoords].Letter -eq 'M' -and $Grid[$TopRightCoords].Letter -eq 'S' -and $Grid[$BottomLeftCoords].Letter -eq 'M') -or `
+            ($Grid[$TopLeftCoords].Letter -eq 'M' -and $Grid[$BottomRightCoords].Letter -eq 'S' -and $Grid[$TopRightCoords].Letter -eq 'S' -and $Grid[$BottomLeftCoords].Letter -eq 'M') -or `
+            ($Grid[$TopLeftCoords].Letter -eq 'S' -and $Grid[$BottomRightCoords].Letter -eq 'M' -and $Grid[$TopRightCoords].Letter -eq 'M' -and $Grid[$BottomLeftCoords].Letter -eq 'S') 
         )
         {
             $count++
@@ -58,3 +56,5 @@ foreach ($StartPoint in $grid) {
     }
 }
 Write-Host "Count: $count"
+
+Write-Host "Runtime: $((Get-Date) - $StartTime)"
