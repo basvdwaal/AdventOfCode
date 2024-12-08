@@ -34,13 +34,13 @@ function Increment-BinaryNumber {
 }
 
 
-function Get-Validity {
+function Parse-Equation {
     param (
         [object[]]$inputArray,
         [int64]$solution
     )
     
-    Write-Host "$solution : $inputArray"
+    # Write-Host "$solution : $inputArray"
 
     $AmountOfOperations = $inputArray.Length -1
     $totalCombinations = [math]::Pow(2, $AmountOfOperations)
@@ -49,7 +49,6 @@ function Get-Validity {
     foreach ($j in 0..($totalCombinations-1))
     {
         $TempArr = $inputArray.Clone()
-        # We start with the first index and then add or multiply with the now first index
         [int64]$res, [array]$TempArr = $TempArr
 
         for ($i = 0; $i -lt $inputArray.Length - 1;$i++)
@@ -83,7 +82,7 @@ function Get-Validity {
 
         if ($res -eq $solution)
         {
-            Write-Host "Solution found: $binary" -ForegroundColor Green
+            # Write-Host "Solution found: $binary" -ForegroundColor Green
             $script:Sum += $solution
             return
         }
@@ -97,35 +96,10 @@ function Get-Validity {
 
 foreach ($line in $PuzzleInput)
 {
-    # Add + to each operation
-    # Write-Host $line
-    
     $solution, $line = $line -split ": "
 
     $EquationArr = [int[]]($line -split " ")
-    Get-Validity -inputArray $EquationArr -solution $solution
-
-    # foreach ($Equation in $PossibleEquations.Values)
-    # {
-    #     $origEquation = $Equation.Clone()
-    #     $Total = 0
-
-    #     while ($Equation.Length -gt 1) {
-    #         $Total = Invoke-Expression ($Equation[0..2] -join "")
-    #         $StrLength = $Equation.Length -1
-    #         $Equation = $Equation[2..$StrLength]
-    #         $Equation[0] = $Total
-    #     }
-        
-        
-    #     if ($Total -eq [int64]$solution)
-    #     {
-    #         Write-Host "$origEquation = $solution" -ForegroundColor Green
-    #         $count++
-    #         $TotalSum += $solution
-    #         break
-    #     }
-    # }
+    Parse-Equation -inputArray $EquationArr -solution $solution
 }
 
 Write-Host "Total Sum: $Sum"
