@@ -9,114 +9,126 @@ $PuzzleInput = (Get-Content $PSScriptRoot\Input.txt)
 
 #region Functions
 
-# function GenerateCombinations {
-#     param (
-#         [object[]]$inputArray,
-#         [string[]]$fillOptions
-#     )
-#     # Find indices of empty slots
-#     $emptyIndices = @(for ($i = 0; $i -lt $inputArray.Length; $i++) {
-#         if ($inputArray[$i] -eq $null) { $i }
-#     })
-    
-#     # Total number of combinations (2^number of empty slots)
-#     $totalCombinations = [math]::Pow($fillOptions.Length, $emptyIndices.Count)
-    
-#     # Generate all combinations
-#     for ($i = 0; $i -lt $totalCombinations; $i++) {
-#         # Convert index to the appropriate base for fill options
-#         $currentCombination = $i
-#         $pattern = @()
-#         for ($j = 0; $j -lt $emptyIndices.Count; $j++) {
-#             $pattern += $fillOptions[$currentCombination % $fillOptions.Length]
-#             $currentCombination = [math]::Floor($currentCombination / $fillOptions.Length)
-#         }
-        
-#         # Clone the original array
-#         $newArray = $inputArray.Clone()
-        
-#         # Fill the empty slots with the current pattern
-#         for ($k = 0; $k -lt $emptyIndices.Count; $k++) {
-#             $newArray[$emptyIndices[$k]] = $pattern[$k]
-#         }
-        
-#         # Output the modified array as a string
-#         $newArray -join ''
-#     }
-# }
-
-function Get-AllCombinations {
+function Increment-BinaryNumber {
     param (
-        [object[]]$inputArray,
-        [string[]]$fillOptions
+        [array]$Binary
     )
-    # Find indices of empty slots
-    $emptyIndices = @(for ($i = 0; $i -lt $inputArray.Length; $i++) {
-        if ($inputArray[$i] -eq "") { $i }
-    })
     
-    # Total number of combinations (2^number of empty slots)
-    $totalCombinations = [math]::Pow($fillOptions.Length, $emptyIndices.Count)
-    
-    $OutputArr = @{}
-
-    Do
+    for ($i = 0; $i -lt $Binary.Length; $i++)
     {
-        $NewArr = $inputArray.Clone()
-        foreach ($Index in $emptyIndices)
-        {
-            $NewArr[$index] = Get-Random @("+","*")
-        }
-
-        if (!($OutputArr[$newArr -join ""]))
-        {
-            $OutputArr[$NewArr -join ""] += $NewArr
+        if ($Binary[$i] -eq '0')
+        { 
+            $Binary[$i] = '1'
+            if ($i -ne 0)
+            {
+                foreach ($t in 0..($I-1))
+                {
+                    $Binary[$t] = '0'
+                }
+            }
+            break
         }
     }
-    While (($OutputArr.Values).Count -lt $totalCombinations)
 
-    return $OutputArr
+    return $Binary
+}
+
+
+function Get-Validity {
+    param (
+        [object[]]$inputArray,
+        [int64]$solution
+    )
+    
+    Write-Host "$solution : $inputArray"
+
+    $AmountOfOperations = $inputArray.Length -1
+    $totalCombinations = [math]::Pow(2, $AmountOfOperations)
+    $binary = ('0' * $AmountOfOperations).ToCharArray()
+
+    foreach ($j in 0..($totalCombinations-1))
+    {
+        $TempArr = $inputArray.Clone()
+        # We start with the first index and then add or multiply with the now first index
+        [int64]$res, [array]$TempArr = $TempArr
+
+        for ($i = 0; $i -lt $inputArray.Length - 1;$i++)
+        {
+            if ($Binary[$i] -eq '0')
+            {
+                $res += $TempArr[0]
+            }
+            elseif ($Binary[$i] -eq '1')
+            {
+                $res *= $TempArr[0]
+            }
+            else
+            {
+                Write-host "?????"
+            }
+
+            if ($TempArr.Length -gt 1)
+            {
+                $TempArr = $TempArr[1..($TempArr.Length - 1)]
+            }
+        }
+
+        # Early exit of this solution if it is no longer feasible
+        if ($res -gt $solution)
+        {
+            # Write-Host "Exiting early as $res > $solution"
+            $binary = Increment-BinaryNumber -Binary $binary
+            continue
+        }
+
+        if ($res -eq $solution)
+        {
+            Write-Host "Solution found: $binary" -ForegroundColor Green
+            $script:Sum += $solution
+            return
+        }
+        $binary = Increment-BinaryNumber -Binary $binary
+    }
 }
 
 #Endregion Functions
 
-$count = 0
-$TotalSum = 0
+[int64]$Sum = 0
 
 foreach ($line in $PuzzleInput)
 {
     # Add + to each operation
-    Write-Host $line
+    # Write-Host $line
     
     $solution, $line = $line -split ": "
 
-    $EquationArr = ($line -split " ") -join "||" -split "\|"
-    $PossibleEquations = Get-AllCombinations -inputArray $EquationArr -fillOptions @("+","*")
+    $EquationArr = [int[]]($line -split " ")
+    Get-Validity -inputArray $EquationArr -solution $solution
 
-    foreach ($Equation in $PossibleEquations.Values)
-    {
-        $origEquation = $Equation.Clone()
-        $Total = 0
+    # foreach ($Equation in $PossibleEquations.Values)
+    # {
+    #     $origEquation = $Equation.Clone()
+    #     $Total = 0
 
-        while ($Equation.Length -gt 1) {
-            $Total = Invoke-Expression ($Equation[0..2] -join "")
-            $StrLength = $Equation.Length -1
-            $Equation = $Equation[2..$StrLength]
-            $Equation[0] = $Total
-        }
+    #     while ($Equation.Length -gt 1) {
+    #         $Total = Invoke-Expression ($Equation[0..2] -join "")
+    #         $StrLength = $Equation.Length -1
+    #         $Equation = $Equation[2..$StrLength]
+    #         $Equation[0] = $Total
+    #     }
         
         
-        if ($Total -eq [int64]$solution)
-        {
-            Write-Host "$origEquation = $solution" -ForegroundColor Green
-            $count++
-            $TotalSum += $solution
-            break
-        }
-    }
+    #     if ($Total -eq [int64]$solution)
+    #     {
+    #         Write-Host "$origEquation = $solution" -ForegroundColor Green
+    #         $count++
+    #         $TotalSum += $solution
+    #         break
+    #     }
+    # }
 }
 
-Write-Host "Total Sum: $TotalSum"
+Write-Host "Total Sum: $Sum"
 
 
 # ======================================================================
