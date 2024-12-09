@@ -38,19 +38,27 @@ For ($i = 0; $i -lt $PuzzleInput.Length; $i++)
     }
 }
 
+$($ExtendedArray -join "|")
+
 Write-host "Starting defrag..."
 
 $MaxIndex = ($ExtendedArray.Count - 1)
+$LastIndex = @{}
 
 For ($i = ($ExtendedArray.Count - 1); $i -gt 0; $i--)
 {
+    if ([char]$ExtendedArray[$i] -eq $EmptyChar)
+    {
+        continue
+    }
+    
     if ($i % 100 -eq 0)
     {
         Write-Progress -Activity "Defragging.." -Status "$($MaxIndex - $i)/$maxIndex" -PercentComplete ($($MaxIndex - $i)/$maxIndex * 100)
     }
 
     # From back to front, find last element & size
-    $SubArr = New-Object System.Collections.ArrayList
+    $FileSize = 0
     $FileID = $null
     while ($ExtendedArray[$i] -ne ".")
     {
@@ -59,7 +67,7 @@ For ($i = ($ExtendedArray.Count - 1); $i -gt 0; $i--)
             $FileID = $ExtendedArray[$i]
         }
 
-        $SubArr.Add($ExtendedArray[$i]) | Out-Null
+        $FileSize++
 
         if ($FileID -ne $ExtendedArray[$i - 1])
         {
@@ -73,11 +81,16 @@ For ($i = ($ExtendedArray.Count - 1); $i -gt 0; $i--)
     }
 
     # Write-Host $($ExtendedArray -join "|")
-    $GapNeeded = $SubArr.Count
-
     # Find first gap that fits
-    $Gap = New-Object System.Collections.ArrayList
-    For ($j = 0; $j -lt $ExtendedArray.Count; $j++)
+    $Gap = 0
+    
+    if (! ($LastIndex.Keys -contains $FileSize))
+    {
+        $LastIndex[$FileSize] = 0
+    }
+
+    $ArrayLength = $ExtendedArray.Count
+    For ($j = $LastIndex[$FileSize];  $j -lt $ArrayLength; $j++)
     {
         # If Current index in gap search loop >= first element of file we are moving
         if ($j -ge $i)
@@ -86,40 +99,44 @@ For ($i = ($ExtendedArray.Count - 1); $i -gt 0; $i--)
         }
         if ([char]$ExtendedArray[$j] -eq $EmptyChar)
         {
-            $Gap.Add($j) | Out-Null
+            $Gap++ 
         }
         else
         {
-            # Clear the array if we find a non-empty space
-            if ($Gap) {
-                $Gap.Clear()
-            }
+            $Gap = 0
         }
 
-        if ($Gap.Count -ge $GapNeeded)
+        if ($Gap -eq $FileSize)
         {
-            For ($k = 0; $k -le $SubArr.Count - 1; $k++)
+            For ($k = $j - $Gap + 1; $k -le $j; $k++)
             {
-                $ExtendedArray[$Gap[$k]] = $SubArr[$K]
+                $ExtendedArray[$k] = $FileID
+                
             }
 
-            for ($l = $i; $l -le ($i + $SubArr.Count) - 1; $l++)
+            for ($l = $i; $l -le ($i + $FileSize) - 1; $l++)
             {
                 $ExtendedArray[$l] = "."
             }
 
+            $LastIndex[$FileSize] = $j
+            $($ExtendedArray -join "|")
             break
         }
     }
+    
 }
 
-$($ExtendedArray -join "|") | out-file Output.txt
+Write-Progress -Activity "Defragging.." -Completed
+
+$($ExtendedArray -join "|") # | out-file Output.txt
 
 $CheckSum = 0
 for ($i = 0; $i -lt $ExtendedArray.Count; $i++)
 {
     if ([char]$ExtendedArray[$i] -ne $EmptyChar)
     {
+        Write-Host "$i * $([int]::Parse($ExtendedArray[$i])) = $($i * [int]::Parse($ExtendedArray[$i]))"
         $CheckSum += $i * [int]::Parse($ExtendedArray[$i])
     }
 }
