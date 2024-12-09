@@ -3,7 +3,7 @@ Set-StrictMode -Version latest
 $ErrorActionPreference = 'Stop'
 $StartTime = Get-Date
 
-$PuzzleInput = (Get-Content $PSScriptRoot\SampleInput.txt)
+$PuzzleInput = (Get-Content $PSScriptRoot\Input.txt)
 
 # ======================================================================
 # ======================================================================
@@ -38,23 +38,28 @@ For ($i = 0; $i -lt $PuzzleInput.Length; $i++)
     }
 }
 
-$($ExtendedArray -join "|")
+# Write-Host $($ExtendedArray -join "|")
 
 Write-host "Starting defrag..."
 
-$MaxIndex = ($ExtendedArray.Count - 1)
 $LastIndex = @{}
 
-For ($i = ($ExtendedArray.Count - 1); $i -gt 0; $i--)
+For ($i = ($ExtendedArray.Count - 1); $i -ge 0; $i--)
 {
+    if ($i % 100 -eq 0)
+    {
+        Write-Progress -Activity "Defragging.." -Status $i -PercentComplete ($i/($ExtendedArray.Count - 1) * 100)
+    }
+    
     if ([char]$ExtendedArray[$i] -eq $EmptyChar)
     {
         continue
     }
-    
-    if ($i % 100 -eq 0)
+
+    if ($LastIndex[1] -gt $i)
     {
-        Write-Progress -Activity "Defragging.." -Status "$($MaxIndex - $i)/$maxIndex" -PercentComplete ($($MaxIndex - $i)/$maxIndex * 100)
+        # No empty spaces left where we can move files to
+        break
     }
 
     # From back to front, find last element & size
@@ -120,7 +125,8 @@ For ($i = ($ExtendedArray.Count - 1); $i -gt 0; $i--)
             }
 
             $LastIndex[$FileSize] = $j
-            $($ExtendedArray -join "|")
+            
+            # Write-Host $($ExtendedArray[0..50] -join "|")
             break
         }
     }
@@ -129,20 +135,20 @@ For ($i = ($ExtendedArray.Count - 1); $i -gt 0; $i--)
 
 Write-Progress -Activity "Defragging.." -Completed
 
-$($ExtendedArray -join "|") # | out-file Output.txt
+# Write-Host $($ExtendedArray -join "|") # | out-file Output.txt
 
-$CheckSum = 0
+[int64]$TotalSum = 0
 for ($i = 0; $i -lt $ExtendedArray.Count; $i++)
 {
     if ([char]$ExtendedArray[$i] -ne $EmptyChar)
     {
         Write-Host "$i * $([int]::Parse($ExtendedArray[$i])) = $($i * [int]::Parse($ExtendedArray[$i]))"
-        $CheckSum += $i * [int]::Parse($ExtendedArray[$i])
+        [Int64]$CheckSum = $i * [int]::Parse($ExtendedArray[$i])
+        $TotalSum += $CheckSum
     }
 }
 
-Write-Host "Checksum: $CheckSum"
-
+Write-Host "Checksum: $TotalSum"
 
 # ======================================================================
 # ======================================================================
