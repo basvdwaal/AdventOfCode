@@ -13,7 +13,6 @@ $PuzzleInput = (Get-Content $PSScriptRoot\Input.txt)
 
 $ExtendedArray = New-Object System.Collections.ArrayList
 $id = 0
-$EmptyChar = [char]"."
 
 Write-host "Creating Array..."
 For ($i = 0; $i -lt $PuzzleInput.Length; $i++)
@@ -46,12 +45,12 @@ $LastIndex = @{}
 
 For ($i = ($ExtendedArray.Count - 1); $i -ge 0; $i--)
 {
-    if ($i % 100 -eq 0)
+    if ($i % 300 -eq 0)
     {
         Write-Progress -Activity "Defragging.." -Status $i -PercentComplete ($i/($ExtendedArray.Count - 1) * 100)
     }
     
-    if ([char]$ExtendedArray[$i] -eq $EmptyChar)
+    if ($ExtendedArray[$i] -eq ".")
     {
         continue
     }
@@ -85,10 +84,9 @@ For ($i = ($ExtendedArray.Count - 1); $i -ge 0; $i--)
         }
     }
 
-    # Write-Host $($ExtendedArray -join "|")
     # Find first gap that fits
     $Gap = 0
-    
+   
     if (! ($LastIndex.Keys -contains $FileSize))
     {
         $LastIndex[$FileSize] = 0
@@ -102,7 +100,7 @@ For ($i = ($ExtendedArray.Count - 1); $i -ge 0; $i--)
         {
             break
         }
-        if ([char]$ExtendedArray[$j] -eq $EmptyChar)
+        if ($ExtendedArray[$j] -eq ".")
         {
             $Gap++ 
         }
@@ -135,14 +133,11 @@ For ($i = ($ExtendedArray.Count - 1); $i -ge 0; $i--)
 
 Write-Progress -Activity "Defragging.." -Completed
 
-# Write-Host $($ExtendedArray -join "|") # | out-file Output.txt
-
 [int64]$TotalSum = 0
 for ($i = 0; $i -lt $ExtendedArray.Count; $i++)
 {
-    if ([char]$ExtendedArray[$i] -ne $EmptyChar)
+    if ($ExtendedArray[$i] -ne ".")
     {
-        Write-Host "$i * $([int]::Parse($ExtendedArray[$i])) = $($i * [int]::Parse($ExtendedArray[$i]))"
         [Int64]$CheckSum = $i * [int]::Parse($ExtendedArray[$i])
         $TotalSum += $CheckSum
     }
@@ -154,3 +149,4 @@ Write-Host "Checksum: $TotalSum"
 # ======================================================================
 
 Write-Host "Runtime: $((Get-Date) - $StartTime)"
+# Runtime: 00:00:23.8023160
