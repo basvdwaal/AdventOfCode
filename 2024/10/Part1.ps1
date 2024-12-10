@@ -82,7 +82,6 @@ foreach ($Tile in $Grid.Values)
             {
                 # Write-Host "Trail end found at: ($($Tile.X),$($Tile.Y)) with height $($Tile.Height)"
                 $Script:TotalScore++
-                $script:Trailheadscore++
                 # Write-Host "New total: $script:TotalScore"
                 continue
             }
