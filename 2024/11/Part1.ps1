@@ -10,9 +10,11 @@ $Stones = (Get-Content $PSScriptRoot\Input.txt) -split " " | foreach {[int]$_}
 #region Functions
 #Endregion Functions
 
-for ($i = 0; $i -lt 25; $i++)
+$Blinks = 20
+
+for ($i = 0; $i -lt $Blinks; $i++)
 {
-    Write-Progress -Activity "Outer Loop Progress" -Status "Processing iteration $i of 25" -PercentComplete (($i / 25) * 100)
+    Write-Progress -Activity "Outer Loop Progress" -Status "Processing iteration $i of $Blinks" -PercentComplete (($i / $Blinks) * 100)
 
     for ($Index = 0; $Index -lt $Stones.Count; $Index++)
     {
@@ -46,9 +48,9 @@ for ($i = 0; $i -lt 25; $i++)
             $Stones[$Index] *= 2024
         }
     }
-    Write-Host $Stones
+    # Write-Host $Stones
 }
-
+Write-Progress -Completed
 
 Write-Host "Number of Stones: $($stones.Count)"
 
