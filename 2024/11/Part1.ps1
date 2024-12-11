@@ -8,52 +8,90 @@ $Stones = (Get-Content $PSScriptRoot\Input.txt) -split " " | foreach {[int]$_}
 # ======================================================================
 
 #region Functions
-#Endregion Functions
 
-$Blinks = 20
-
-for ($i = 0; $i -lt $Blinks; $i++)
+class Stone
 {
-    Write-Progress -Activity "Outer Loop Progress" -Status "Processing iteration $i of $Blinks" -PercentComplete (($i / $Blinks) * 100)
+    [int64] $Value
+    [int] $Blinks
 
-    for ($Index = 0; $Index -lt $Stones.Count; $Index++)
-    {
-        Write-Progress -Activity "Inner Loop Progress" -Status "Processing stone $Index of $($Stones.Count - 1)" -PercentComplete (($Index / $Stones.Count) * 100) -Id 1
+    Stone([int64]$Value, [int]$Blinks) {
+        $this.Init(@{Value = $Value; Blinks = $Blinks })
+    }
 
-        if ($Stones[$Index] -eq 0)
-        {
-            $Stones[$Index] = 1
-        }
-        elseif($Stones[$Index].ToString().Length % 2 -eq 0)
-        {
-            $stoneStr = $Stones[$Index].ToString()
-            $midindex = (($stoneStr.length)/2)
-            $Stones[$Index] = [int]($stoneStr[0..($midindex-1)] -join "")
-            $Stone2 = [int]($stoneStr[$midindex..($stoneStr.length-1)] -join "")
-
-            if ($Index -ne $stones.Count -1)
-            {
-                $Stones = $Stones[0..$Index] + @($Stone2) + $Stones[($Index+1)..($Stones.Count -1)]
-            }
-            else
-            {
-                $Stones = $Stones + @($Stone2)
-            }
-
-            # Skip the just added element
-            $Index++
-        }
-        else 
-        {
-            $Stones[$Index] *= 2024
+    [void] Init([hashtable]$Properties) {
+        foreach ($Property in $Properties.Keys) {
+            $this.$Property = $Properties.$Property
         }
     }
-    # Write-Host $Stones
+
+    [string] ToString() {
+        return "$($this.Value),$($this.Blinks)"
+    }
 }
-Write-Progress -Completed
 
-Write-Host "Number of Stones: $($stones.Count)"
+$Script:LookupTable = @{}
 
+function Calculate-NumberOfStones
+{
+    param
+    (
+        $stone 
+    )
+
+    if ($Stone.Blinks -eq $script:Blinks)
+    {
+        return 1
+    }
+
+    if ($Script:LookupTable[$($Stone.ToString())])
+    {
+        return $Script:LookupTable[$($Stone.ToString())]
+    }
+
+    if ($stone.Value -eq 0)
+    {
+        $NewStone = [Stone]::new(1,$($Stone.Blinks + 1))
+        $Count = Calculate-NumberOfStones -stone $NewStone
+        $Script:LookupTable[$($NewStone.ToString())] = $count
+        Return $Count
+    }
+    elseif ($stone.Value.ToString().Length % 2 -eq 0)
+    {
+        $stoneStr = $Stone.Value.ToString()
+        $MidIndex = (($stoneStr.length)/2)
+        $Stone1 = [Stone]::new([int]($stoneStr[0..($MidIndex -1)] -join ""),$Stone.Blinks)
+        $Stone2 = [Stone]::new([int]($stoneStr[$midindex..($stoneStr.length-1)] -join ""),$Stone.Blinks)
+        
+        $Stone1.Blinks++
+        $Count1 = Calculate-NumberOfStones -stone $stone1
+        $Script:LookupTable[$($Stone1.ToString())] = $Count1
+
+        $Stone2.Blinks++
+        $Count2 = Calculate-NumberOfStones -stone $stone2
+        $Script:LookupTable[$($Stone2.ToString())] = $Count2
+
+        return ($Count1 + $Count2)
+    }
+    else
+    {
+        $NewStone = [Stone]::new($stone.Value * 2024,$($Stone.Blinks + 1))
+        $Count = Calculate-NumberOfStones -stone $NewStone
+        $Script:LookupTable[$($NewStone.ToString())] = $count
+        Return $Count
+    }
+}
+#Endregion Functions
+
+$TotalStones = 0
+
+$Script:Blinks = 25
+foreach ($Stone in $Stones)
+{
+    $TotalStones += Calculate-NumberOfStones -stone ([Stone]::new($Stone,0))
+}
+
+# $LookupTable
+Write-Host "Number of Stones: $TotalStones"
 
 # ======================================================================
 # ======================================================================
