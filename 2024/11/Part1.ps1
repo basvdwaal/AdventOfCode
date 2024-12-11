@@ -35,48 +35,45 @@ function Calculate-NumberOfStones
 {
     param
     (
-        $stone 
+        $Value,
+        $Blinks
     )
 
-    if ($Stone.Blinks -eq $script:Blinks)
+    if ($Blinks -eq $script:Blinks)
     {
         return 1
     }
 
-    if ($Script:LookupTable[$($Stone.ToString())])
+    if ($Script:LookupTable["$Value,$Blinks"])
     {
-        return $Script:LookupTable[$($Stone.ToString())]
+        return $Script:LookupTable["$Value,$Blinks"]
     }
 
-    if ($stone.Value -eq 0)
+    if ($Value -eq 0)
     {
-        $NewStone = [Stone]::new(1,$($Stone.Blinks + 1))
-        $Count = Calculate-NumberOfStones -stone $NewStone
-        $Script:LookupTable[$($NewStone.ToString())] = $count
+        $Count = Calculate-NumberOfStones -Value 1 -Blinks ($Blinks + 1)
+        $Script:LookupTable["$Value,$Blinks"] = $count
         Return $Count
     }
-    elseif ($stone.Value.ToString().Length % 2 -eq 0)
+    elseif ($Value.ToString().Length % 2 -eq 0)
     {
-        $stoneStr = $Stone.Value.ToString()
+        $stoneStr = $Value.ToString()
         $MidIndex = (($stoneStr.length)/2)
-        $Stone1 = [Stone]::new([int]($stoneStr[0..($MidIndex -1)] -join ""),$Stone.Blinks)
-        $Stone2 = [Stone]::new([int]($stoneStr[$midindex..($stoneStr.length-1)] -join ""),$Stone.Blinks)
+        $Value1 = [int]($stoneStr[0..($MidIndex -1)] -join "")
+        $Value2 = [int]($stoneStr[$midindex..($stoneStr.length-1)] -join "")
         
-        $Stone1.Blinks++
-        $Count1 = Calculate-NumberOfStones -stone $stone1
-        $Script:LookupTable[$($Stone1.ToString())] = $Count1
+        $Count1 = Calculate-NumberOfStones -Value $Value1 -Blinks ($Blinks + 1)
+        $Script:LookupTable["$Value1,$Blinks"] = $Count1
 
-        $Stone2.Blinks++
-        $Count2 = Calculate-NumberOfStones -stone $stone2
-        $Script:LookupTable[$($Stone2.ToString())] = $Count2
+        $Count2 = Calculate-NumberOfStones -Value $Value2 -Blinks ($Blinks + 1)
+        $Script:LookupTable["$Value2,$Blinks"] = $Count2
 
         return ($Count1 + $Count2)
     }
     else
     {
-        $NewStone = [Stone]::new($stone.Value * 2024,$($Stone.Blinks + 1))
-        $Count = Calculate-NumberOfStones -stone $NewStone
-        $Script:LookupTable[$($NewStone.ToString())] = $count
+        $Count = Calculate-NumberOfStones -Value ($Value * 2024) -Blinks ($Blinks + 1)
+        $Script:LookupTable["$Value,$Blinks"] = $count
         Return $Count
     }
 }
@@ -87,11 +84,12 @@ $TotalStones = 0
 $Script:Blinks = 25
 foreach ($Stone in $Stones)
 {
-    $TotalStones += Calculate-NumberOfStones -stone ([Stone]::new($Stone,0))
+    $TotalStones += Calculate-NumberOfStones -Value $Stone -Blinks 0
 }
 
 # $LookupTable
 Write-Host "Number of Stones: $TotalStones"
+
 
 # ======================================================================
 # ======================================================================
