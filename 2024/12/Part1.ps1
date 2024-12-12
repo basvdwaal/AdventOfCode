@@ -26,6 +26,7 @@ function Convert-TextToGrid {
                 Y      = $y
                 Letter = $letter
                 Boundaries = 0
+                Visited = $false
             }
             $Grid["$x,$y"] = $obj
         }
@@ -46,11 +47,11 @@ $Directions = @(
 $Grid = Convert-TextToGrid -TextLines $PuzzleInput
 $Plots = @{}
 $PlotID = 0
-$Visited = @()
+# $Visited = @()
 
 foreach ($Tile in $Grid.Values)
 {
-    if ($tile -in $Visited)
+    if ($tile.Visited)
     {
         continue
     }
@@ -75,7 +76,7 @@ foreach ($Tile in $Grid.Values)
             {
                 if ($NextTile.Letter -eq $Tile.Letter)
                 {
-                    if ($Visited -contains $NextTile)
+                    if ($NextTile.Visited)
                     {
                         # Write-Host "Tile ($($NextTile.X),$($NextTile.y)) already visited"
                         continue
@@ -101,7 +102,7 @@ foreach ($Tile in $Grid.Values)
                 $tile.Boundaries++
             }
         }
-        $Visited += $Tile
+        $Tile.Visited = $true
     }
 
     $PlotID++
@@ -123,3 +124,4 @@ Write-Host "Total Cost: $TotalCost"
 # ======================================================================
 
 Write-Host "Runtime: $((Get-Date) - $StartTime)"
+# Runtime: 00:00:06.8849584
