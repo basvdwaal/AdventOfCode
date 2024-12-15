@@ -46,7 +46,7 @@ function Write-GridToScreen {
     for ($Y = 0; $Y -lt $script:GridHeight; $Y++)
     {
         
-        for ($X = 0; $X -le $Script:GridHeight; $X++)
+        for ($X = 0; $X -le $Script:GridWidth; $X++)
         {
             $pos = $Grid["$x,$y"]
 
