@@ -164,7 +164,7 @@ $Came_from[$StartTile.String] = $null
 $StartTile.cost = 0
 
 # Starting direction is east
-$StartTile.Direction = $Directions | where Direction -eq "East" | select -ExpandProperty Direction
+$StartTile.Direction = $Directions | where Direction -eq "Right" | select -ExpandProperty Direction
 
 while ($Queue.Count -gt 0)
 {
@@ -211,9 +211,9 @@ $path.Remove($EndTile) | Out-Null # remove end tile from array
 foreach ($tile in $path)
 {
     $tile.Letter = "X"
-    
-    # Write-Host $Tile.Cost
-    # $null = Read-host " "
+    Write-GridToScreen $Grid
+    Write-Host $Tile.Cost
+    $null = Read-host " "
     # Start-Sleep -Milliseconds 20
 }
 
