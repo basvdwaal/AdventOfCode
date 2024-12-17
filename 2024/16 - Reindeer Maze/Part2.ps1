@@ -29,7 +29,7 @@ function Convert-TextToGrid {
                 Cost = $null
                 Direction = ""
                 Distance = $null
-                # ValidFrom = @()
+                FullPath = @()
 
             }
             $Grid["$x,$y"] = $obj
@@ -86,11 +86,10 @@ $Queue.Enqueue( $StartTile, 0 )
 $Came_from = @{}
 $Came_from[$StartTile.String] = $null
 $StartTile.cost = 0
-$StartTile.Distance = 0
 
 # Starting direction is east
 $StartTile.Direction = $Directions | where Direction -eq "East" | select -ExpandProperty Direction
-
+$lastTile = $null
 while ($Queue.Count -gt 0)
 {
     $Tile = $Queue.Dequeue()
@@ -102,11 +101,13 @@ while ($Queue.Count -gt 0)
     foreach ($D in $Directions)
     {
         $NextTile = $Grid["$($Tile.X + $D.X),$($Tile.Y + $D.Y)"]
+        if ($nextTile.String -eq $lastTile) {continue}
         if ($NextTile.Letter -eq "#") { continue }
 
         $ExtraCost = $D.Direction -ne $Tile.Direction ? 1001 : 1  # Ternary checks!
 
         $NewCost = $Tile.Cost + $ExtraCost
+
 
         if ($null -eq $NextTile.Cost -or $NewCost -lt $NextTile.Cost)
         {
@@ -122,7 +123,23 @@ while ($Queue.Count -gt 0)
 
             # $NextTile.Letter = "0"
         }
+        elseif ($NewCost -gt $NextTile.Cost){
+            continue
+        }
+
+        if ($NextTile.FullPath)
+        {
+            $NextTile.FullPath += @($Tile)
+        }
+        else
+        {
+            $NextTile.FullPath = @($Tile)
+        }
+        
+        $NextTile.FullPath += $Tile.FullPath
+
     }
+    $lastTile = $tile.String
     
     # Write-GridToScreen $Grid
     # $null = Read-host " "
@@ -156,6 +173,17 @@ $Directions = @(
     [PSCustomObject]@{ Direction = "Up"; X = 0; Y =  -1},
     [PSCustomObject]@{ Direction = "Down"; X = 0; Y =  1}
 )
+
+
+foreach ($Tile in $EndTile.FullPath)
+{
+    if ($Tile.Letter -ne "S")
+    {
+
+        $Tile.Letter = "O"
+    }
+}
+
 
 
 $Tile = $Grid.Values | where Letter -eq "S"
