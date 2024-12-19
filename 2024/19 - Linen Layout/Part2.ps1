@@ -26,18 +26,30 @@ function Check-IfPossible ($Pattern)
     {
         if ($Pattern.StartsWith($Towel))
         {
-            if ($Pattern -eq $Towel) { 
-                # Write-Host "$Pattern equals $Towel"
+
+            if ($Pattern -eq $Towel) {
+                # Write-Host "$Pattern equals $Towel" -ForegroundColor Green
                 $options += 1
-                return $options
             }
-            
-            $t = $Pattern[($Towel.Length)..($Pattern.Length - 1)] -join ""
+            # Write-Host "$Pattern starts with $Towel"
+            try
+            {
+                $t = $Pattern[($Towel.Length)..($Pattern.Length - 1)] -join ""
+            }
+            catch
+            {
+                continue
+            }
             $options += Check-IfPossible -Pattern ($t)
+            # Write-Host "continuing with $pattern"
+        }
+        else
+        {
+            # Write-Host "Skipping $towel"
         }
     }
     $Script:Cache[$Pattern] = $options
-
+    # Write-Host "returning $Options"
     return $options
 }
 
@@ -48,14 +60,13 @@ $Towels = $PuzzleInput[0] -split ", "
 $Patterns = $PuzzleInput[2..$($PuzzleInput.Length-1)]
 [Int64]$counter = 0
 $Script:Cache = @{}
-$Script:Count = @{}
 
-foreach ($Pattern in $Patterns) 
+foreach ($Pattern in $Patterns)
 {
     $res = Check-IfPossible $Pattern
     if ($res)
-    { 
-        # Write-Host "Patter: $pattern - Count: $res"
+    {
+        # Write-Host "Pattern: $pattern - Count: $res"
         $counter += $res
     }
     else
@@ -70,3 +81,4 @@ Write-Host "Total possibilities: $counter"
 # ======================================================================
 
 Write-Host "Runtime: $((Get-Date) - $StartTime)"
+# Runtime: 00:00:29.3558061
