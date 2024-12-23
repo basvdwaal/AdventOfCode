@@ -108,7 +108,6 @@ while ($Queue.Count -gt 0)
 
         $NewCost = $Tile.Cost + $ExtraCost
 
-
         if ($null -eq $NextTile.Cost -or $NewCost -lt $NextTile.Cost)
         {
             # $NextTile.Letter = "X"
@@ -147,15 +146,35 @@ while ($Queue.Count -gt 0)
 }
 #>
 
-<#
+#<#
 $path = New-Object System.Collections.ArrayList
-while ($Tile -ne $StartTile) {
-    [void]$path.Add($Tile)
-    $Tile = $came_from[$tile.String]
+$Queue = New-Object System.Collections.Queue
+
+# $queue.Enqueue($EndTile)
+
+$queue.Enqueue($EndTile.FullPath[0])
+
+while ($queue.Count -gt 0)
+{
+    $Tile = $Queue.Dequeue()
+    if ($tile -notin $path)
+    {
+        [void]$path.Add($Tile)
+    }
+
+    foreach ($Direction in $Directions)
+    {
+        # get the next tile around the current tile and if the distance property is less than the current tile distance add it to the queue
+        $NextTile = $Grid["$($Tile.X + $Direction.X),$($Tile.Y + $Direction.Y)"]
+        if ($NextTile.Distance -eq $Tile.Distance -1)
+        {
+            $Queue.Enqueue($NextTile)
+        }
+    }
 }
 # [void]$path.Add($StartTile)
 $path.Reverse()
-$path.Remove($EndTile) | Out-Null # remove end tile from array
+# $path.Remove($EndTile) | Out-Null # remove end tile from array
 
 foreach ($tile in $path)
 {
@@ -165,8 +184,11 @@ foreach ($tile in $path)
     # $null = Read-host " "
     # Start-Sleep -Milliseconds 20
 }
-#>
 
+Write-GridToScreen $Grid
+
+#>
+#<# Walk through the grid
 $Directions = @(
     [PSCustomObject]@{ Direction = "Right"; X = 1; Y =  0},
     [PSCustomObject]@{ Direction = "Left"; X = -1; Y =  0},
@@ -175,14 +197,13 @@ $Directions = @(
 )
 
 
-foreach ($Tile in $EndTile.FullPath)
-{
-    if ($Tile.Letter -ne "S")
-    {
-
-        $Tile.Letter = "O"
-    }
-}
+# foreach ($Tile in $EndTile.FullPath)
+# {
+#     if ($Tile.Letter -ne "S")
+#     {
+#         $Tile.Letter = "O"
+#     }
+# }
 
 
 
@@ -222,7 +243,9 @@ while ($Key.Key -ne "Enter")
 
 
 
-Write-Host "Cost: $($EndTile.Cost)"
+# Write-Host "Cost: $($EndTile.Cost)"
+#>
+Write-Host "tiles: $($path.count + 2)"
 
 # ======================================================================
 # ======================================================================
