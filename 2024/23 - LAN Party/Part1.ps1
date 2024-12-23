@@ -35,8 +35,8 @@ foreach ($line in $PuzzleInput)
         $Map[$PC2] = @($PC1)
     }
 }
-# $output = New-Object System.Collections.Generic.HashSet[string]
-$output = [System.Collections.Concurrent.ConcurrentDictionary[string, string]]::new()
+$output = New-Object System.Collections.Generic.HashSet[string]
+# $output = [System.Collections.Concurrent.ConcurrentDictionary[string, string]]::new()
 
 #<#
 #foreach ($PC1 in $Map.Keys)
@@ -60,7 +60,7 @@ $map.Keys | foreach-object -throttlelimit 50 -parallel {
                     $str = (@($PC1, $PC2, $PC3) | Sort-Object) -join ","
                     try
                     {
-                        [void]$dict.TryAdd($str, $null)
+                        [void]$dict.Add($str)
 
                     #     Write-Host "$PC1 : $($map[$PC1])"
                     #     Write-Host "$PC2 : $($map[$PC2])"
@@ -77,7 +77,22 @@ $map.Keys | foreach-object -throttlelimit 50 -parallel {
 }
 #>
 
-$total = ($output.Keys | where {$_ -like "*t*"} | Measure-Object).Count
+$Total = 0
+:outer
+foreach ($group in $output)
+{
+    foreach ($PC in $group -split ",")
+    {
+        if ($PC -like "t*")
+        { 
+            $Total+= 1
+            continue outer
+        }
+        
+    }
+}
+
+# $total = ($output.Keys | where {$_ -like "*t*"} | Measure-Object).Count
 
 Write-Host "Result: $Total"
 
@@ -85,4 +100,4 @@ Write-Host "Result: $Total"
 # ======================================================================
 
 Write-Host "Runtime: $((Get-Date) - $StartTime)"
-# 2341 -> too high
+# Runtime: 00:00:03.5349232
