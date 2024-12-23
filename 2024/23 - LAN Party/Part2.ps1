@@ -1,4 +1,6 @@
 
+using namespace System.Collections  # Used for ArrayList
+
 Set-StrictMode -Version latest
 $StartTime = Get-Date
 
@@ -35,89 +37,40 @@ foreach ($line in $PuzzleInput)
         $Map[$PC2] = @($PC1)
     }
 }
-$output = New-Object System.Collections.Generic.HashSet[string]
-# $output = [System.Collections.Concurrent.ConcurrentDictionary[string, string]]::new()
+$HashTable = @{}
 
-#<#
-#foreach ($PC1 in $Map.Keys)
-$map.Keys | foreach-object -throttlelimit 50 -parallel {
-    $PC1 = $_
-    $dict = $using:output
-    $map = $using:map
-    foreach ($PC2 in $Map[$PC1])
-    {
-        foreach ($PC3 in $Map[$PC2])
-        {
-            if ($PC3 -eq $PC1)
-            {
-                continue
-            }
-            else
-            {
-                $PC4 = $Map[$PC3]
-                if ($PC4 -eq $PC1)
-                {
-                    $str = (@($PC1, $PC2, $PC3) | Sort-Object) -join ","
-                    try
-                    {
-                        [void]$dict.Add($str)
-
-                    #     Write-Host "$PC1 : $($map[$PC1])"
-                    #     Write-Host "$PC2 : $($map[$PC2])"
-                    #     Write-Host "$PC3 : $($map[$PC3])"
-                    }
-                    catch
-                    {
-                        # Already exists
-                    }
-                }
-            }
-        }
-    }
-}
-#>
-
-Foreach ($group in $output)
+function search($Node, $RequiredNodes)
 {
-    $PC1, $PC2, $PC3 = $group -split ","
-    $List = New-Object System.Collections.ArrayList
+    $key = ($RequiredNodes | Sort-Object) -join ","
+    if ($HashTable[$key]) { return }
+    $HashTable[$key] = $RequiredNodes
 
-    while 
-
-    foreach ($PC in $map[$PC1])
+    :outer
+    foreach ($Neighbor in $Map[$Node])
     {
-        if ($Map[$PC] -contains $PC2 -and ($Map[$PC] -contains $PC3)
+        if ($Neighbor -in $RequiredNodes) { continue }
+
+        foreach ($query in $RequiredNodes)
         {
-            [void]$list.Add($PC)
+            if ($Neighbor -notin $Map[$query]) { continue outer }
         }
+        [void]$RequiredNodes.add($Neighbor)
+        search $Neighbor $RequiredNodes
+        $RequiredNodes.remove($Neighbor)
     }
+    search $Neighbor $RequiredNodes
 }
 
-
-
-
-
-$Total = 0
-:outer
-foreach ($group in $output)
-{
-    foreach ($PC in $group -split ",")
-    {
-        if ($PC -like "t*")
-        { 
-            $Total+= 1
-            continue outer
-        }
-        
-    }
+foreach ($PC in $Map.Keys) {
+    search $PC ([arraylist]@($PC))
 }
 
-# $total = ($output.Keys | where {$_ -like "*t*"} | Measure-Object).Count
-
-Write-Host "Result: $Total"
+$t = $HashTable.Keys | Sort-Object -Property Length -Descending | Select-Object -First 1
+$t = $t -split "," | Sort-Object
+Write-Host ($t -join ",")
 
 # ======================================================================
 # ======================================================================
 
 Write-Host "Runtime: $((Get-Date) - $StartTime)"
-# Runtime: 00:00:03.5349232
+# Runtime: 00:04:50.7050500   :)
