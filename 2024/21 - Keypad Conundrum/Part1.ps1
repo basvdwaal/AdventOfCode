@@ -8,9 +8,6 @@ $PuzzleInput = (Get-Content $PSScriptRoot\Input.txt)
 # ======================================================================
 
 #region Functions
-
-
-
 #Endregion Functions
 
 
@@ -212,10 +209,14 @@ foreach ($Code in $PuzzleInput)
     foreach ($Letter in $Code.GetEnumerator()) 
     {
         $Letter = [string]$Letter
-        $OutputR1 += $KeypadDirections[$StartLetter][$Letter] + "A"
+        $Movement = $KeypadDirections[$StartLetter][$Letter]
+
+        # Write-Host "$StartLetter -> $letter = $Movement"
+
+        $OutputR1 += $Movement + "A"
         $StartLetter = $Letter
     }
-    # Write-Host $OutputR1
+    Write-Host $OutputR1
     
     # Robot 2
     $OutputR2 = ""
@@ -223,10 +224,14 @@ foreach ($Code in $PuzzleInput)
     foreach ($Letter in $OutputR1.GetEnumerator())
     {
         $Letter = [string]$Letter
-        $OutputR2 += $MovementDict[$StartLetter][$Letter] + "A"
+        $Movement = $MovementDict[$StartLetter][$Letter] 
+
+        # Write-Host "$StartLetter -> $letter = $Movement"
+
+        $OutputR2 += $Movement + "A"
         $StartLetter = $Letter
     }
-    # Write-Host $OutputR2
+    Write-Host $OutputR2
 
     # Robot 3
     $OutputR3 = ""
@@ -234,13 +239,19 @@ foreach ($Code in $PuzzleInput)
     foreach ($Letter in $OutputR2.GetEnumerator())
     {
         $Letter = [string]$Letter
-        $OutputR3 += $MovementDict[$StartLetter][$Letter] + "A"
+        $Movement = $MovementDict[$StartLetter][$Letter]
+
+        # Write-Host "$StartLetter -> $letter = $Movement"
+
+        $OutputR3 += $Movement + "A"
         $StartLetter = $Letter
     }
     Write-Host $OutputR3
 
-    Write-Host "$($OutputR3.Length) * $($Code -replace 'A', '')"
+    Write-Host "$code : $($OutputR3.Length) * $($Code -replace 'A', '')"
     $Total += ($OutputR3.Length * [int]($Code -replace "A", ""))
+
+    Write-Host "====================================="
 }
 
 Write-Host $Total
@@ -249,3 +260,4 @@ Write-Host $Total
 # ======================================================================
 
 Write-Host "Runtime: $((Get-Date) - $StartTime)"
+# 264266 -> Too high
