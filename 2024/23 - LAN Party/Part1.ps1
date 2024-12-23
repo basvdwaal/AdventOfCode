@@ -35,34 +35,22 @@ foreach ($line in $PuzzleInput)
         $Map[$PC2] = @($PC1)
     }
 }
-$output = New-Object System.Collections.Generic.HashSet[string]
+$HashTable = @{}
 
-$map.Keys | foreach-object -throttlelimit 50 -parallel {
-    $PC1 = $_
-    $dict = $using:output
-    $map = $using:map
-    foreach ($PC2 in $Map[$PC1])
-    {
-        foreach ($PC3 in $Map[$PC2])
-        {
-            if ($PC3 -eq $PC1)
+foreach ($PC1 in $Map.Keys) {
+    foreach ($PC2 in $Map[$PC1]) { 
+        foreach ($PC3 in $Map[$PC2]) {
+            if ($PC3 -ne $PC1 -and $PC1 -in $Map[$PC3])
             {
-                continue
-            }
-            else
-            {
-                $PC4 = $Map[$PC3]
-                if ($PC4 -eq $PC1)
+                try
                 {
                     $str = (@($PC1, $PC2, $PC3) | Sort-Object) -join ","
-                    try
-                    {
-                        [void]$dict.Add($str)
-                    }
-                    catch
-                    {
-                        # Already exists
-                    }
+                    # [void]$Set.Add( (@($PC1, $PC2, $PC3) | Sort-Object) )
+                    $HashTable[$str] = @($PC1, $PC2, $PC3)
+                }
+                catch
+                {
+                    # Already exists
                 }
             }
         }
@@ -72,13 +60,13 @@ $map.Keys | foreach-object -throttlelimit 50 -parallel {
 
 $Total = 0
 :outer
-foreach ($group in $output)
+foreach ($group in $HashTable.Values)
 {
-    foreach ($PC in $group -split ",")
+    foreach ($PC in $group)
     {
         if ($PC -like "t*")
         { 
-            $Total+= 1
+            $Total += 1
             continue outer
         }
         
@@ -93,4 +81,4 @@ Write-Host "Result: $Total"
 # ======================================================================
 
 Write-Host "Runtime: $((Get-Date) - $StartTime)"
-# Runtime: 00:00:03.5349232
+# Runtime: 00:00:02.1617333
