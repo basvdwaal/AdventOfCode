@@ -36,10 +36,7 @@ foreach ($line in $PuzzleInput)
     }
 }
 $output = New-Object System.Collections.Generic.HashSet[string]
-# $output = [System.Collections.Concurrent.ConcurrentDictionary[string, string]]::new()
 
-#<#
-#foreach ($PC1 in $Map.Keys)
 $map.Keys | foreach-object -throttlelimit 50 -parallel {
     $PC1 = $_
     $dict = $using:output
@@ -61,10 +58,6 @@ $map.Keys | foreach-object -throttlelimit 50 -parallel {
                     try
                     {
                         [void]$dict.Add($str)
-
-                    #     Write-Host "$PC1 : $($map[$PC1])"
-                    #     Write-Host "$PC2 : $($map[$PC2])"
-                    #     Write-Host "$PC3 : $($map[$PC3])"
                     }
                     catch
                     {
