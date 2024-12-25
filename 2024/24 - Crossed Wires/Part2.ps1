@@ -55,16 +55,21 @@ foreach ($Wire in ($Wires.Keys | where {$_ -like "y*"} | Sort -Descending))
 }
 
 $ExpectedOutput = [Convert]::ToString(([Convert]::ToInt64($InputX, 2) + [Convert]::ToInt64($InputY, 2)), 2) -split "" | where {$_ -ne ""}
-[array]::Reverse($ExpectedOutput)
 
-$OutputGates = $Gates | where { $_.Output -like "z*" } | Sort-Object -Property Output
+# [array]::Reverse($ExpectedOutput)
 
-for ($i = 0; $i -lt $ExpectedOutput.Count; $i++)
+$OutputGates = $Gates | where { $_.Output -like "z*" } | Sort-Object -Property Output -Descending
+
+# Ltrim the expected output to match the number of output gates
+$ExpectedOutput = $ExpectedOutput[($ExpectedOutput.Length - $OutputGates.Length)..($ExpectedOutput.Length - 1)]
+
+for ($i = $OutputGates.Length - 1; $i -ge 0; $i--)
 {
     $Queue = [System.Collections.Queue]::new()
+    $OutputWire = $OutputGates[$i].Output
 
     # Get the Gate that procudes the output and check if we have the required inputs
-    $Queue.Enqueue($OutputGates[$i].Output)
+    $Queue.Enqueue($OutputWire)
 
     While ($Queue.Count -gt 0)
     {
@@ -89,21 +94,14 @@ for ($i = 0; $i -lt $ExpectedOutput.Count; $i++)
         }
     }
 
-    $Gate = $OutputGates[$i]
-    if ($Gate.output -eq "z")
+    if ($Wires[$OutputWire] -ne $ExpectedOutput[$i])
     {
-        $Wires[$Gate.Output] = $ExpectedOutput[$i]
+        Write-Host "Expected: $($ExpectedOutput[$i]) Actual: $($Wires[$OutputWire])" -ForegroundColor Red
     }
     else
     {
-        switch ($Gate.Operator)
-        {
-            "AND" { $Wires[$Gate.Output] = $Wire1 -band $Wire2 }
-            "OR" { $Wires[$Gate.Output] = $Wire1 -bor $Wire2 }
-            "XOR" { $Wires[$Gate.Output] = $Wire1 -bxor $Wire2 }
-        }
+        Write-Host "Expected: $($ExpectedOutput[$i]) Actual: $($Wires[$OutputWire])" -ForegroundColor Green
     }
-
 }
 
 $Output = ""
@@ -111,22 +109,13 @@ foreach ($Wire in ($Wires.Keys | where {$_ -like "z*"} | Sort -Descending))
 {
     $Output += [string]$Wires[$Wire]
 }
-
-$Output = [Convert]::ToInt64($Output, 2)
-
-Write-Host "Output: $Output"
+Write-Host "InputX          : $InputX"
+Write-Host "InputY          : $InputY"
+Write-Host "Expected output : $($ExpectedOutput -join '')"
+Write-Host "Actual output   : $Output"
 
 # ======================================================================
 # ======================================================================
 
 Write-Host "Runtime: $((Get-Date) - $StartTime)"
-# Runtime: 00:00:00.0670576
-
-
-
-switch ($Gate.Operator)
-{
-    "AND" { $Wires[$Gate.Output] = $Wire1 -band $Wire2 }
-    "OR" { $Wires[$Gate.Output] = $Wire1 -bor $Wire2 }
-    "XOR" { $Wires[$Gate.Output] = $Wire1 -bxor $Wire2 }
-}
+# Runtime: 
