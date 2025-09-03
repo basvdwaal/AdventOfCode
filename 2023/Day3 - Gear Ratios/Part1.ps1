@@ -5,7 +5,7 @@ $ErrorActionPreference = 'break'
 
 $StartTime = Get-Date
 
-$PuzzleInput = (Get-Content $PSScriptRoot\sample.txt)
+$PuzzleInput = (Get-Content $PSScriptRoot\input.txt)
 
 # ======================================================================
 # ======================================================================
@@ -78,28 +78,32 @@ $Directions = @(
     [PSCustomObject]@{ Direction = "BottomLeft"; X = -1; Y =  -1}
 )
 
-$SymbolList = ("*", "/", "+", "&", "#", "@", "%", "!", "=", "(", ")", "_")
+$SymbolList = ("*", "/", "+", "&", "#", "@", "%", "!", "=", "(", ")", "-", "$")
 $Total = 0
 
 $grid = Convert-TextToGrid -TextLines $PuzzleInput
-$SkipRestOfNumber = $false
+$CheckedNodes = @()
 
-foreach ($node in ($grid.Values | sort x, y))
+foreach ($node in ($grid.Values | sort y, x))
 {
-    if ($SkipRestOfNumber)
-    {
-        # Number already counted, skip untill next empty space
-        if ($node.IsNumber) { continue } else {$SkipRestOfNumber = $false}
-    }
-
+    # from top left to bottom right:
+    # Find number -> check if its already in the checked array 
+    # if not -> find other numbers next to it and add object to array -> if yes, continue
+    # foreach number in array -> Check if valid. If one valid -> add to total
+    # Add coords to checked array
+    
     # Find next number
     if (! $node.IsNumber) { continue } 
 
+    # Check if number has been parsed before
+    if ($node -in $CheckedNodes) { continue }
+
+    # Find other nodes belonging to this number
     $NumberNodes = @($node)
     While ($true)
     {
         $Node = $Grid["$($node.X + 1),$($node.Y)"]
-        if (! $node.IsNumber) { break }
+        if (-not $node -or -not $node.IsNumber) { break }
 
         $NumberNodes += $node
     }
@@ -114,18 +118,19 @@ foreach ($node in ($grid.Values | sort x, y))
 
             if ($PointToCheck.Value -in $SymbolList)
             {
-                Write-Host "Number starting with $($node.Value) at ($($node.X),$($node.y)) is valid"
+                # Write-Host "Number starting with $($node.Value) at ($($node.X),$($node.y)) is valid"
                 $number = [int]::Parse($NumberNodes.Value -join "")
                 $Total += $number
-                Write-Host "Adding $number to total"
+                # Write-Host "Adding $number to total"
 
-                $SkipRestOfNumber = $true
                 break Nodeloop
             }
         }
 
-        Write-Host "Number $($node.Value) at ($($node.X),$($node.y)) does NOT have a symbol adjacent" -ForegroundColor Yellow
+        # Write-Host "Number $($node.Value) at ($($node.X),$($node.y)) does NOT have a symbol adjacent" -ForegroundColor Yellow
     }
+
+    $CheckedNodes += $NumberNodes
 }
 
 Write-Host $Total
@@ -137,3 +142,4 @@ Write-Host $Total
 # ======================================================================
 
 Write-Host "Runtime: $((Get-Date) - $StartTime)"
+# Runtime: 00:00:01.5460725
