@@ -2,7 +2,8 @@
 Set-StrictMode -Version latest
 $StartTime = Get-Date
 
-$PuzzleInput = (Get-Content $PSScriptRoot\Input.txt)
+$PuzzleInput = (Get-Content $PSScriptRoot\sample.txt)
+# $PuzzleInput = (Get-Content $PSScriptRoot\Input2.txt)
 
 # ======================================================================
 # ======================================================================
