@@ -5,6 +5,8 @@ Set-StrictMode -Version latest
 $PuzzleInput = (Get-Content $PSScriptRoot\Input3.txt)
 
 $StartTime = Get-Date
+
+$ErrorActionPreference = 'break'
 # ======================================================================
 # ======================================================================
 
@@ -20,50 +22,57 @@ $LT = @{
 #Endregion Functions
 
 $Offset = 1000
-$modifier = 10
+$modifier = 1000
 
-$Arr = ($PuzzleInput * $modifier).ToCharArray() 
+$Arr = ($PuzzleInput * $modifier).ToCharArray()
 $total = 0
+
+$Counts = @{
+    [char]'A' = 0
+    [char]'B' = 0
+    [char]'C' = 0
+}
+
+[System.Collections.ArrayList]$slice = $arr[0..$offset]
+
+foreach ($Letter in $slice)
+{
+    if ($Letter -cin [char]'A', [char]'B', [char]'C')
+    {
+        $Counts[$Letter] += 1
+    }
+}
+
 
 for ($i = 0; $i -lt $Arr.Count; $i++)
 {
-    # Skip mentors
-    if ($Arr[$i] -ceq 'A' -or $Arr[$i] -ceq [char]'B' -or $Arr[$i] -ceq [char]'C') { continue }
+    $Letter = [char]$Arr[$i]
+    if ($Letter -cin [char]'a', [char]'b', [char]'c')
+    {
+        $total += $Counts[$LT[$Letter]]
+    }
+
+    # Extend slice by 1 if we can. Also update counts dict if letter is a capital
+    if ($i + 1001 -lt $arr.Length)
+    {   
+        $NextLetter = [char]$arr[$i + 1001]
+        $slice.add($NextLetter) | Out-Null
+        if ($NextLetter -cin [char]'A', [char]'B', [char]'C')
+        {
+            $Counts[$NextLetter] += 1
+        }
+    }
     
-    # Determine slice
-    $startIndex = [System.Math]::Max(0, $i - $offset)
-    $endIndex = [System.Math]::Min($Arr.Length - 1, $i + $offset)
-
-
-    # $length = $endIndex - $startIndex + 1
-    # $subArr = New-Object char[] $length
-
-    # 4. Voer de high-speed kopieeractie uit
-    #    Syntaxis: [array]::Copy(sourceArray, sourceIndex, destinationArray, destinationIndex, length)
-    # [array]::Copy($Arr, $startIndex, $subArr, 0, $length)
-
-
-    $SubArr = $Arr[$startIndex..$endIndex]
-
-    # Loop over $SubArr and count occurences of MentorType
-    $MentorType = $LT[$arr[$i]]
-    # $count = 0
-
-    $temp = ($SubArr -ceq $MentorType)
-    # $temp = $SubArr | where { $_ -eq $MentorType}
-    $total += $temp.count
-
-
-    # foreach ($Person in $SubArr)
-    # {
-    #     if ($person -eq $MentorType) { $count++ }
-    # }
-    # $total += $count
-
-    # $groups = $SubArr| Group-Object 
-    # $Type = $groups | where { $_.Name -ceq $LT.($Arr[$i]) }
-    # $total += $Type.Count
-    
+    # Remove first letter from slice if minimum length has been reached.
+    if ($i -ge 1000)
+    {
+        $PrevLetter = [char]$slice[0]
+        if ($PrevLetter -cin [char]'A', [char]'B', [char]'C')
+        {
+            $Counts[$PrevLetter] -= 1
+        }
+        $slice.RemoveAt(0)
+    }
 }
 
 write-host "Total: $total"
@@ -73,3 +82,4 @@ write-host "Total: $total"
 # ======================================================================
 
 Write-Host "Runtime: $((Get-Date) - $StartTime)"
+# Runtime: 00:02:20.0960542
