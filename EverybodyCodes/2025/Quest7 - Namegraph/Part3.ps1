@@ -126,3 +126,4 @@ write-host "Total: $total"
 # ======================================================================
 
 Write-Host "Runtime: $((Get-Date) - $StartTime)"
+# Runtime: 00:00:21.3055679
