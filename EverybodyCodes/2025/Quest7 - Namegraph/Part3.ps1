@@ -60,7 +60,6 @@ foreach ($Rule in $RulesInput)
     $Rules[[char]$Rule[0]] = ($Rule -replace " " -split ">")[1] -split ","
 }
 
-$Total = 0
 $validnames = @()
 
 for ($Ni = 0; $Ni -lt $Names.Count; $Ni++)
@@ -75,7 +74,8 @@ for ($Ni = 0; $Ni -lt $Names.Count; $Ni++)
 
 # Use a stack to iterate through all possible names
 $stack = New-Object System.Collections.Stack
-$GeneratedNames = @()
+$GeneratedNames = [System.Collections.Generic.HashSet[string]]::new()
+$Total = 0
 
 foreach ($name in $validnames)
 {
@@ -103,7 +103,8 @@ foreach ($name in $validnames)
             $stack.Push($NextName)
             if ($NextName.Length -ge 7)
             {
-                $GeneratedNames += $NextName
+                # $total++
+                $GeneratedNames.add($NextName) | Out-Null
             }
         }
     }
@@ -117,8 +118,8 @@ foreach ($name in $validnames)
 #     Test-Name -name $Name -Rules $Rules | Out-Null
 # }
 
-$total = $GeneratedNames | select -Unique | Measure-Object | select -ExpandProperty Count
-
+# $total = $GeneratedNames | select -Unique | Measure-Object | select -ExpandProperty Count
+$Total = $GeneratedNames.Count
 write-host "Total: $total"
 
 # ======================================================================
