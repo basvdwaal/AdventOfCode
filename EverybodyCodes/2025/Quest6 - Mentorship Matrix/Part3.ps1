@@ -21,59 +21,68 @@ $LT = @{
 
 #Endregion Functions
 
-$Offset = 1000
-$modifier = 1000
-
-$Arr = ($PuzzleInput * $modifier).ToCharArray()
-$total = 0
-
-$Counts = @{
-    [char]'A' = 0
-    [char]'B' = 0
-    [char]'C' = 0
-}
-
-[System.Collections.ArrayList]$slice = $arr[0..$offset]
-
-foreach ($Letter in $slice)
+function calculate($Str, $Offset)
 {
-    if ($Letter -cin [char]'A', [char]'B', [char]'C')
-    {
-        $Counts[$Letter] += 1
-    }
-}
+    $Arr = $Str.ToCharArray()
+    $total = 0
 
-
-for ($i = 0; $i -lt $Arr.Count; $i++)
-{
-    $Letter = [char]$Arr[$i]
-    if ($Letter -cin [char]'a', [char]'b', [char]'c')
-    {
-        $total += $Counts[$LT[$Letter]]
+    $Counts = @{
+        [char]'A' = 0
+        [char]'B' = 0
+        [char]'C' = 0
     }
 
-    # Extend slice by 1 if we can. Also update counts dict if letter is a capital
-    if ($i + 1001 -lt $arr.Length)
-    {   
-        $NextLetter = [char]$arr[$i + 1001]
-        $slice.add($NextLetter) | Out-Null
-        if ($NextLetter -cin [char]'A', [char]'B', [char]'C')
+    [System.Collections.ArrayList]$slice = $arr[0..$offset]
+
+    foreach ($Letter in $slice)
+    {
+        if ($Letter -cin [char]'A', [char]'B', [char]'C')
         {
-            $Counts[$NextLetter] += 1
+            $Counts[$Letter] += 1
         }
     }
-    
-    # Remove first letter from slice if minimum length has been reached.
-    if ($i -ge 1000)
+
+
+    for ($i = 0; $i -lt $Arr.Count; $i++)
     {
-        $PrevLetter = [char]$slice[0]
-        if ($PrevLetter -cin [char]'A', [char]'B', [char]'C')
+        $Letter = [char]$Arr[$i]
+        if ($Letter -cin [char]'a', [char]'b', [char]'c')
         {
-            $Counts[$PrevLetter] -= 1
+            $total += $Counts[$LT[$Letter]]
         }
-        $slice.RemoveAt(0)
+
+        # Extend slice by 1 if we can. Also update counts dict if letter is a capital
+        if ($i + ($Offset + 1) -lt $arr.Length)
+        {   
+            $NextLetter = [char]$arr[$i + ($offset + 1)]
+            $slice.add($NextLetter) | Out-Null
+            if ($NextLetter -cin [char]'A', [char]'B', [char]'C')
+            {
+                $Counts[$NextLetter] += 1
+            }
+        }
+        
+        # Remove first letter from slice if minimum length has been reached.
+        if ($i -ge $Offset)
+        {
+            $PrevLetter = [char]$slice[0]
+            if ($PrevLetter -cin [char]'A', [char]'B', [char]'C')
+            {
+                $Counts[$PrevLetter] -= 1
+            }
+            $slice.RemoveAt(0)
+        }
     }
+
+    return $total
 }
+
+$offset = 1000
+
+$One = calculate -str $PuzzleInput -Offset $offset
+$Two = calculate -str ($PuzzleInput * 2) -Offset $offset
+
+$total = $one + ($Two - $one) * 999
 
 write-host "Total: $total"
 
@@ -83,3 +92,4 @@ write-host "Total: $total"
 
 Write-Host "Runtime: $((Get-Date) - $StartTime)"
 # Runtime: 00:02:20.0960542
+# Runtime (Optimized): 00:00:00.3971510
