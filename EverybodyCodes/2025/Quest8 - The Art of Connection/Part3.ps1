@@ -14,14 +14,14 @@ function Get-NumberOfCrosses ($Newline, $lines)
 {
     $NumCrosses = 0
     # Nieuwe lijn
-    # $Png = [System.Math]::Max($Newline[0], $Newline[1])
-    $Pnk, $Png = $Newline | Sort-Object
+    $Png = [System.Math]::Max($Newline[0], $Newline[1])
+    $Pnk = [System.Math]::Min($Newline[0], $Newline[1])
 
     foreach ($line in $lines)
     {
         # Oude lijn
-        $Pok, $Pog = $line
-        # $Pok = [System.Math]::Min($line[0], $line[1])
+        $Pog = [System.Math]::Max($line[0], $line[1])
+        $Pok = [System.Math]::Min($line[0], $line[1])
 
         if ($Png -in $line -or $pnk -in $line)
         {
@@ -71,10 +71,14 @@ for ($i = 1; $i -le 256; $i++)
 
         $s, $b = $i, $j | Sort-Object
 
-        if ($CheckedLines.ContainsKey(@($s,$b))) { continue }
+        $k = [System.Math]::Min($i, $j)
+        $g = [System.Math]::Max($i, $j)
+
+        $key = "$k-$g"
+        if ($CheckedLines.ContainsKey($key)) { continue }
         else 
         {
-            $CheckedLines.Add( @($s,$b), (Get-NumberOfCrosses -Newline @($s, $b) -lines $Lines) )
+            $CheckedLines.Add( $key, (Get-NumberOfCrosses -Newline @($k, $g) -lines $Lines) )
         }
     }
 }
@@ -85,3 +89,4 @@ Write-host "Max number of cuts: $($CheckedLines.Values | measure -Maximum | sele
 # ======================================================================
 
 Write-Host "Runtime: $((Get-Date) - $StartTime)"
+# Runtime: 00:16:19.1717470
