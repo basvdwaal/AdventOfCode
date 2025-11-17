@@ -111,14 +111,14 @@ $MaxSteps = 4
 
 
 
-$stack = New-Object System.Collections.Stack
+$stack = New-Object System.Collections.Queue
 
-$stack.Push(@($Tile, 0))
+$stack.Enqueue(@($Tile, 0))
 $PossibleTiles = [System.Collections.Generic.HashSet[[pscustomobject]]]::new()
 
 While ($Stack.Count -gt 0)
 {
-    $CurrentTile, $Count = $stack.Pop()
+    $CurrentTile, $Count = $stack.Dequeue()
 
     if ($count -ge $MaxSteps) { continue }
 
@@ -130,7 +130,7 @@ While ($Stack.Count -gt 0)
         # If added is false, the tile was already in the list and we don't have to check the options again.
         if($Added)
         {
-            $Stack.Push(@($NextTile, ($Count + 1)) )
+            $Stack.Enqueue(@($NextTile, ($Count + 1)) )
         }
     }
 }
@@ -145,3 +145,4 @@ Write-host "Total: $($PossibleTiles | where value -eq "S" | measure | select -Ex
 # ======================================================================
 
 Write-Host "Runtime: $((Get-Date) - $StartTime)"
+# Runtime: 00:00:00.0353976
