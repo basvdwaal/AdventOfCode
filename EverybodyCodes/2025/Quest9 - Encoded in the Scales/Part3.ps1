@@ -88,33 +88,6 @@ foreach ($ChildId in $IDs)
 
 #>
 
-Write-Host "Pre-calculating mismatch masks.."
-
-# $MismatchMasks[ChildId][ParentId] = 64-bit mask
-$MismatchMasks = @{}
-$DragonDuckIDs = [int[]]($DNADict.Keys)
-
-foreach ($ChildId in $DragonDuckIDs)
-{
-    $ChildDNA = $DNADict[$ChildId]
-    
-    # Maak een sub-dictionary voor dit kind
-    $ChildMasks = @{}
-
-    foreach ($ParentId in $DragonDuckIDs)
-    {
-        # Een dragonduck kan niet zijn/haar eigen ouder zijn
-        if ($ChildId -eq $ParentId) { continue }
-        
-        $ParentDNA = $DNADict[$ParentId]
-        
-        # Bereken en sla het bitmask op
-        $ChildMasks[$ParentId] = Get-MismatchMask -Child $ChildDNA -Parent $ParentDNA
-    }
-    
-    $MismatchMasks[$ChildId] = $ChildMasks
-}
-
 
 Write-Host "Initializing connections graph..."
 $Conns = @{} # Dit wordt onze Adjacency List
