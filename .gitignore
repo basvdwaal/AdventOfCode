@@ -3,3 +3,6 @@
 
 # Skip cache files
 *.xml
+
+# Testing files
+t.ps1
