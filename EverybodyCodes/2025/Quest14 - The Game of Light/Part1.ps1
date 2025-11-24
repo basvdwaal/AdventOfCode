@@ -1,8 +1,8 @@
 
 Set-StrictMode -Version latest
 
-$PuzzleInput = (Get-Content $PSScriptRoot\sample.txt)
-# $PuzzleInput = (Get-Content $PSScriptRoot\Input.txt)
+# $PuzzleInput = (Get-Content $PSScriptRoot\sample.txt)
+$PuzzleInput = (Get-Content $PSScriptRoot\Input.txt)
 
 $StartTime = Get-Date
 # ======================================================================
@@ -40,6 +40,9 @@ function Convert-TextToGrid
         }
     }
 
+    $Script:GridWidth = $TextLines[0].Length
+    $Script:GridHeight = $TextLines.Count
+
     return $Grid
 }
 
@@ -76,6 +79,39 @@ function Get-ActiveTiles ($Grid)
     return $Count
 }
 
+function Write-GridToScreen
+{
+    param (
+        [hashtable]$Grid
+    )
+
+    # Clear-Host
+    $arr = New-Object System.Collections.ArrayList
+    [void]$arr.Add("")
+    for ($Y = 0; $Y -lt $script:GridHeight; $Y++)
+    {
+
+        for ($X = 0; $X -lt $Script:GridWidth; $X++)
+        {
+            $pos = $Grid[$x][$y]
+
+            if ($pos)
+            {
+                if ($pos.Active)
+                {
+                    [void]$arr.Add("#")
+                }
+                else
+                {
+                    [void]$arr.Add(".")
+                }
+            }
+        }
+        [void]$arr.Add("`r`n")
+    }
+    Write-Host $arr
+}
+
 
 #Endregion Functions
 
@@ -83,25 +119,31 @@ $Grid = Convert-TextToGrid -TextLines $PuzzleInput
 $NumRounds = 10
 $total = 0
 
+# Write-host "Startgrid:"
+# Write-GridToScreen -Grid $Grid
+# Write-host "=========================="
+
 for ($i = 1; $i -le $NumRounds; $i++)
 {
-    $NewGrid = @{}
-
-    foreach ($Tile in $Grid.values.values)
+    $PendingUpdates = foreach ($Tile in $Grid.values.values)
     {
-        if (! $NewGrid.Item($Tile.X))
-        {
-            $NewGrid[$Tile.X] = @{}
+        # We geven het hele object door plus wat de status MOET worden
+        [PSCustomObject]@{
+            Tile     = $Tile
+            NewState = IsActiveNextRound -Tile $Tile -Grid $Grid
         }
-        
-        $NewGrid[$Tile.X][$tile.Y] = $Tile
-        $tile.Active = IsActiveNextRound -Tile $Tile -Grid $Grid
     }
 
-    $Grid = $NewGrid
+    foreach ($Update in $PendingUpdates)
+    {
+        $Update.Tile.Active = $Update.NewState
+    }
 
     $TileCount = Get-ActiveTiles $Grid
-    Write-Host "Count after round $i - $Tilecount"
+    # Write-Host "Count after round $i - $Tilecount"
+
+    # Write-GridToScreen -Grid $Grid
+    # Write-host "=========================="
 
     $total += $TileCount
 
@@ -115,3 +157,4 @@ Write-Host $total
 # ======================================================================
 
 Write-Host "Runtime: $((Get-Date) - $StartTime)"
+# Runtime: 00:00:00.4322255
