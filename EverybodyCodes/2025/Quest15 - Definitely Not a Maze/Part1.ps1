@@ -1,8 +1,8 @@
 
 Set-StrictMode -Version latest
 
-$PuzzleInput = (Get-Content $PSScriptRoot\sample.txt)
-# $PuzzleInput = (Get-Content $PSScriptRoot\Input.txt)
+# $PuzzleInput = (Get-Content $PSScriptRoot\sample.txt)
+$PuzzleInput = (Get-Content $PSScriptRoot\Input.txt)
 
 $StartTime = Get-Date
 # ======================================================================
@@ -48,6 +48,83 @@ function Add-TileToGrid ([hashtable]$grid, [Int32]$X, [int32]$Y, [string]$Value 
     return $grid
 }
 
+function Get-GridBounds {
+    param (
+        [Parameter(Mandatory=$true)]
+        [System.Collections.IDictionary]$Grid
+    )
+
+    # Initialize variables to opposite extremes
+    $minX = [int]::MaxValue
+    $maxX = [int]::MinValue
+    $minY = [int]::MaxValue
+    $maxY = [int]::MinValue
+    $hasPoints = $false
+
+    # Iterate through the grid
+    foreach ($xKey in $Grid.Keys) {
+        # Cast to int to ensure numeric comparison (handles string keys like "10")
+        $x = [int]$xKey 
+
+        if ($x -lt $minX) { $minX = $x }
+        if ($x -gt $maxX) { $maxX = $x }
+
+        # Check inner Y keys
+        if ($null -ne $Grid[$xKey]) {
+            foreach ($yKey in $Grid[$xKey].Keys) {
+                $hasPoints = $true
+                $y = [int]$yKey
+
+                if ($y -lt $minY) { $minY = $y }
+                if ($y -gt $maxY) { $maxY = $y }
+            }
+        }
+    }
+
+    # If the grid was empty, return nothing
+    if (-not $hasPoints) {
+        Write-Warning "Grid is empty."
+        return $null
+    }
+
+    # Return a clean Custom Object
+    return [PSCustomObject]@{
+        MinX   = $minX
+        MaxX   = $maxX
+        MinY   = $minY
+        MaxY   = $maxY
+        # Calculate dimensions automatically (Absolute distance + 1)
+        Width  = ($maxX - $minX) + 1 
+        Height = ($maxY - $minY) + 1
+    }
+}
+
+function Write-GridToScreen
+{
+    param (
+        [hashtable]$Grid
+    )
+
+    $arr = New-Object System.Collections.ArrayList
+    [void]$arr.Add("")
+    for ($Y = 0; $Y -lt $script:GridHeight; $Y++)
+    {
+        
+        for ($X = 0; $X -le $Script:GridWidth; $X++)
+        {
+            $pos = $Grid["$x,$y"]
+
+            if ($pos)
+            {
+                [void]$arr.Add($pos.Value)
+            }
+        }
+        [void]$arr.Add("`r`n")
+    }
+    Write-Host $arr
+}
+
+
 
 #Endregion Functions
 
@@ -88,6 +165,8 @@ foreach ($Instruction in $Instructions)
     }
 }
 
+$GridBounds = Get-GridBounds -Grid $Grid
+
 # Set last segment as the end
 $Grid[$TileX][$TileY].Value = "E"
 
@@ -111,8 +190,35 @@ while ($Queue.Count -gt 0)
     {
         if (! $Grid[$Tile.X + $Direction.X]) { continue }
 
-        $NextTile = $Grid[$Tile.X + $Direction.X][$Tile.Y + $Direction.Y]
-        if (! $NextTile) { continue }
+
+        $Nx = $Tile.X + $Direction.X
+        $Ny = $Tile.Y + $Direction.Y
+
+        $NextTile = $Grid[$Nx][$Ny]
+
+        
+        if (! $NextTile)
+        {
+            # Check if within bounds of grid. If yes -> empty space. If no -> skip.
+            if ($Nx -ge $GridBounds.MinX -and $Nx -le $GridBounds.MaxX -and
+                $Ny -ge $GridBounds.MinY -and $Ny -le $GridBounds.MaxY
+            )
+            {
+                $NextTile = [PSCustomObject]@{
+                    X = $Nx
+                    Y = $Ny
+                    Value = ""
+                    Steps = $Tile.Steps
+                }
+                $Grid[$Nx][$Ny] = $NextTile
+            }
+            else
+            {
+                # Outside grid, skip
+                continue
+            }
+        }
+        elseif ($NextTile.Value -eq "#") { continue }
         
         if (-not $Visited.Contains($NextTile))
         {
@@ -127,8 +233,8 @@ while ($Queue.Count -gt 0)
 
 
 
-
 # ======================================================================
 # ======================================================================
 
 Write-Host "Runtime: $((Get-Date) - $StartTime)"
+# Runtime: 00:00:00.2943401
