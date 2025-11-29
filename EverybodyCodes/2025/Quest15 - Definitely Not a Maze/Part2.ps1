@@ -161,7 +161,7 @@ foreach ($Instruction in $Instructions)
     [int]$Steps = $Instruction[1..($Instruction.Length -1)] -join ""
     
     # Char to int gets the wrong number.
-    $Steps -= 48
+    # $Steps -= 48
 
     $Direction = Get-NextDirection -CurrentDirection $Direction -Side $Side
 
@@ -183,8 +183,8 @@ $Grid[$TileX][$TileY].Value = "E"
 $Queue = New-Object System.Collections.Queue
 $Queue.Enqueue($Grid[0][0])
 
-$Visited = New-Object System.Collections.Generic.HashSet[pscustomobject]
-[void]$Visited.Add($Grid[0][0])
+$Visited = New-Object bool[] ($GridBounds.Width * $GridBounds.Height)
+$Visited[0] = $true
 
 while ($Queue.Count -gt 0)
 {
@@ -204,40 +204,33 @@ while ($Queue.Count -gt 0)
 
         $NextTile = $Grid[$Nx][$Ny]
 
+        $Index = ($Ny * $GridBounds.Width) + $Nx
+        if ($Visited[$Index]) { continue }
 
         if (! $NextTile)
         {
             # Check if within bounds of grid. If yes -> empty space. If no -> skip.
-            if ($Nx -ge $GridBounds.MinX -and $Nx -le $GridBounds.MaxX -and
-                $Ny -ge $GridBounds.MinY -and $Ny -le $GridBounds.MaxY
-            )
-            {
-                $NextTile = [PSCustomObject]@{
-                    X = $Nx
-                    Y = $Ny
-                    Value = "."
-                    Steps = $Tile.Steps
-                }
-                $Grid[$Nx][$Ny] = $NextTile
+            # if ($Nx -ge $GridBounds.MinX -and $Nx -le $GridBounds.MaxX -and
+            #     $Ny -ge $GridBounds.MinY -and $Ny -le $GridBounds.MaxY
+            
+            # Check if outside bounds of grid. If yes -> skip.
+            if ($Nx -le $GridBounds.MinX -or $Nx -ge $GridBounds.MaxX -or $Ny -le $GridBounds.MinY -or $Ny -ge $GridBounds.MaxY ) { Continue }
+
+            $NextTile = [PSCustomObject]@{
+                X = $Nx
+                Y = $Ny
+                Value = "."
+                Steps = $Tile.Steps
             }
-            else
-            {
-                # Outside grid, skip
-                continue
-            }
+            $Grid[$Nx][$Ny] = $NextTile
         }
         elseif ($NextTile.Value -eq "#") { continue }
 
-        if (-not $Visited.Contains($NextTile))
-        {
-            $NextTile.Steps = $Tile.Steps + 1
-            $Queue.Enqueue($NextTile)
-            [void]$Visited.Add($NextTile)
-        }
+        $NextTile.Steps = $Tile.Steps + 1
+        $Queue.Enqueue($NextTile)
+        $Visited[$Index] = $true
     }
 }
-
-
 
 
 # ======================================================================
