@@ -21,12 +21,12 @@ function test-rotation ([string]$instruction, [int]$StartPos)
     
     if ($Side -eq "R") # Rotate right
     {
-        $Pointer = $pointer += $Steps
-        if ($pointer -gt 100)
+        $pointer += $Steps
+        while ($pointer -gt 100 )
         {
-            $pointer = $pointer % 100
+            $pointer = $pointer - 100
             $total++
-            Write-host "Pointer passed 0!"
+            # Write-host "Pointer passed 0!"
         }
     }
     else # Rotate left

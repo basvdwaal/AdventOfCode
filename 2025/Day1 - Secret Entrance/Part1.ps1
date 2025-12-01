@@ -27,10 +27,10 @@ foreach ($instruction in $instructions)
        
     if ($Side -eq "R") # Rotate right
     {
-        $Pointer = $pointer += $Steps
-        if ($pointer -gt 99)
+        $pointer += $Steps
+        while ($pointer -gt 100 )
         {
-            $pointer = $pointer % 100
+            $pointer = $pointer - 100
         }
     }
     else # Rotate left
