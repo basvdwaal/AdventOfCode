@@ -1,15 +1,13 @@
 
 Set-StrictMode -Version latest
 
-# $PuzzleInput = (Get-Content $PSScriptRoot\sample.txt)
-$PuzzleInput = (Get-Content $PSScriptRoot\Input.txt)
+$PuzzleInput = (Get-Content $PSScriptRoot\sample.txt)
+# $PuzzleInput = (Get-Content $PSScriptRoot\Input.txt)
 
 $StartTime = Get-Date
 # ======================================================================
 # ======================================================================
 
-#region Functions
-#Endregion Functions
 $total = 0
 
 foreach ($Sequence in $PuzzleInput)
@@ -38,8 +36,42 @@ foreach ($Sequence in $PuzzleInput)
         }
     }
 
-    # Write-Host "BiggestPair: $($BiggestPair[0])$($BiggestPair[1])"
+    Write-Host "BiggestPair: $($BiggestPair[0])$($BiggestPair[1])"
     $total += [int]::Parse("$($BiggestPair[0])$($BiggestPair[1])")
+
+}
+
+Write-Host "Total: $total"
+
+#####################################################
+#   Alternative solution
+#####################################################
+
+$total = 0
+foreach ($Sequence in $PuzzleInput)
+{
+    $Numbers = [int[]]($Sequence.ToCharArray() | % { $_ - 48})
+    $BiggestPair = @(0, 0)
+    
+    # Find biggest number in array minus last spot (so we can always get two numbers)
+    $FirstNumberIndex = 0
+    for ($i = 0; $i -lt $Numbers.Count - 1; $i++)
+    {
+        $number = $Numbers[$i]
+        if ($number -gt $Numbers[$FirstNumberIndex]) { $FirstNumberIndex = $i }
+    }
+    $FirstNumber = $numbers[$FirstNumberIndex]
+        
+    # Find second biggest number, starting at the index of the first
+    $SecondNumber = 0
+    for ($i = $FirstNumberIndex + 1; $i -lt $Numbers.Count; $i++)
+    {
+        $number = $Numbers[$i]
+        if ($number -gt $SecondNumber) { $SecondNumber = $number }
+    }
+
+    Write-Host "BiggestPair: $(($FirstNumber * 10) + $SecondNumber)"
+    $total += ($FirstNumber * 10) + $SecondNumber
 }
 
 Write-Host "Total: $total"
