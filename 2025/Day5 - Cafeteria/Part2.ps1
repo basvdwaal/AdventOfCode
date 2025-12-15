@@ -1,75 +1,72 @@
 
 Set-StrictMode -Version latest
 
-$PuzzleInput = (Get-Content $PSScriptRoot\sample.txt)
-# $PuzzleInput = (Get-Content $PSScriptRoot\Input.txt)
+# $PuzzleInput = (Get-Content $PSScriptRoot\sample.txt)
+$PuzzleInput = (Get-Content $PSScriptRoot\Input.txt)
 
 $StartTime = Get-Date
 # ======================================================================
 # ======================================================================
 
-
-$total = 0
-$FreshRanges = @()
-
-Foreach ($line in $PuzzleInput)
+# Use a Generic List for performance instead of standard arrays
+$FreshRanges = New-Object System.Collections.Generic.List[Object]
+foreach ($line in $PuzzleInput)
 {
-    
-    $FreshRanges += ,@($Rs,$Re)
-        
-    # Stop after the ranges
-    if ($line -eq '') { break }
+    if ([string]::IsNullOrWhiteSpace($line)) { break }
 
+    $parts = $line.Split('-')
+    
+    $FreshRanges.Add(@{ 
+            Start = [int64]$parts[0]
+            End   = [int64]$parts[1]
+        })
 }
 
-# Iterate over the ranges untill we can't compress anymore
-do 
+$SortedRanges = $FreshRanges | Sort-Object { $_.Start }
+
+$MergedRanges = New-Object System.Collections.Generic.List[Object]
+
+# Initialize with the first range
+$CurrentStart = $SortedRanges[0].Start
+$CurrentEnd = $SortedRanges[0].End
+
+for ($i = 1; $i -lt $SortedRanges.Count; $i++)
 {
-    $Didsomething = $false
-    :outer
-    foreach ($Range1 in $FreshRanges)
+    $NextStart = $SortedRanges[$i].Start
+    $NextEnd = $SortedRanges[$i].End
+
+    # Check for Overlap OR Adjacency
+    # We use ($CurrentEnd + 1) because if one range ends at 5 and next starts at 6, 
+    # they are continuous integers (no gap).
+    if ($NextStart -le ($CurrentEnd + 1))
     {
-        foreach ($Range2 in $FreshRanges)
+        # Merge logic: Extend the current end if the next range goes further
+        if ($NextEnd -gt $CurrentEnd)
         {
-            # check if a range lies within another range
-            if ($Rs -gt $Range2[0] -and $Re -lt $Range2[1])
-            {
-                Write-Host "Range $Rs - $Re lies within $($Range2[0]) - $($Range2[1])!"
-                $FreshRanges.Remove($Range1[0],$Range1[1])
-                $Didsomething = $true
-                continue outer
-            }
-            
-            # Check if a range completely overlaps
-            if ($Rs -lt $Range2[0] -and $Re -gt $Range2[1])
-            {
-                Write-Host "Range $($Range2[0]) - $($Range2[1]) lies within $Rs - $Re! Expanding range.."
-                $Range2[0] = $Rs
-                $Range2[1] = $Re
-                $Didsomething = $true
-                continue outer
-            }
-    
-            # Check partial overlaps
-            if ($Rs -lt $Range2[0] -and ($Re -gt $Range2[1] -and $Re -le $Range2[1]) )
-            {
-                Write-Host "Range $Rs - $Re partially overlaps with range $($Range2[0]) - $($Range2[1])! Expanding range.."
-                $Range2[0] = $Rs
-                continue outer
-            }
-    
-            if (($Rs -ge $Range2[0] -and $Rs -le $Range2[1]) -and $Re -gt $Range2[1])
-            {
-                Write-Host "Range $Rs - $Re partially overlaps with range $($Range2[0]) - $($Range2[1])! Expanding range.."
-                $Range2[1] = $Re
-                continue outer
-            }
+            $CurrentEnd = $NextEnd
         }
     }
-} while ( $Didsomething -eq $true )
+    else
+    {
+        # Gap detected: Save the current range and start a new one
+        $MergedRanges.Add(@{ Start = $CurrentStart; End = $CurrentEnd })
+        $CurrentStart = $NextStart
+        $CurrentEnd = $NextEnd
+    }
+}
+
+# Add the final range remaining in the variables
+$MergedRanges.Add(@{ Start = $CurrentStart; End = $CurrentEnd })
+
+$total = [int64]0
+
+foreach ($range in $MergedRanges)
+{
+    $count = ($range.End - $range.Start) + 1
+    $total += $count
+}
     
 Write-host "Total: $total"
-
 
 # ======================================================================
 # ======================================================================
